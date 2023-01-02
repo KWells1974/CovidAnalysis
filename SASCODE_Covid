@@ -1,0 +1,113 @@
+/* --Data pull from */
+/* https://ourworldindata.org/covid-deaths */
+
+/* --Verifying Data */
+proc sql;
+select Count (*) as TotalCovidDeaths
+from work.import
+quit;
+
+proc sql;
+Select count (*)
+From work.import;
+where continent is not null
+order by 3,4;
+quit;
+
+/* --Selecting Data that will be used */
+
+proc sql;
+Select location, date
+From work.import
+order by 1;
+quit;
+
+/* --Look at Total Cases vs Total Deaths from 2020-2022 */
+proc sql;
+Select Location, date, (handwashing_facilities/population_density) * 100 as Percentageofdeaths
+from work.import
+where location like '%States%'
+order by 1,2;
+quit;
+
+/* --View Total Cases vs Population */
+proc sql outobs=10;/* limit to first 10 results */
+Select Location, date, population, total_cases, (total_cases/population)*100 as DiagnosedwithCovid
+from work.import
+where location like '%states%'
+order by 2 desc;/* this is how you make them the TOP 10 */
+quit;
+
+
+/* --Countries with the Highest Infection rate compaired to Population */
+proc sql outobs=10;
+Select location, Population, Max(total_cases) as HighestInfectionCount, Max((total_cases/population))*100 as PercentPopulationInfected
+from work.import1
+Group by location, population
+order by PercentpopulationInfected desc;
+quit;
+
+/* --Countries with the highest Death Count per population */
+/* --convert total_deaths to int */
+proc sql outobs=10;
+Select Location, max(total_deaths) as totaldeathcount
+from Work.import
+/* --Where location like '%state%' */
+Where location is not null
+group by location
+order by TotalDeathCount desc;
+quit;
+
+/* --Showing continents with the highest death count per population */
+
+proc sql outobs=10;
+Select continent, max(total_deaths) as totaldeathcount
+from work.import
+where continent is not null
+group by continent
+order by totaldeathcount desc;
+quit;
+
+/* -- Global Numbers */
+proc sql outobs=10;
+Select  sum(new_cases) as total_cases, sum(new_deaths) as total_deaths, sum(new_deaths)/sum(new_cases)*100 as DeathPercentage
+from work.import
+/* --where location like '%states%' */
+where continent is not null
+/* --group by date */
+order by 1,2;
+quit;
+
+/* --Covid Vaccination Table */
+proc sql outobs=10;
+select *
+from work.import1;
+quit;
+
+/* --Join table covidvaccination and coviddeaths */
+
+proc sql outobs=10;
+Select *
+from work.import1 dea
+join work.import vac
+	on dea.location=vac.location
+	and dea.date = vac.date;
+quit;	
+
+/* --Looking at Total Population vs Vaccinations */
+
+proc sql outobs=10;
+Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, sum(vac.new_vaccinations)
+from work.import dea
+join work.import1 vac
+	on dea.location=vac.location
+	and dea.date = vac.date
+	where dea.continent is not null
+	order by 2,3;
+quit;
+
+input(your_string_variable, best.)
+
+
+
